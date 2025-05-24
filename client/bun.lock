@@ -22,6 +22,7 @@
         "typescript": "^5.6.3",
         "vue": "^3.5.13",
         "vue-router": "^4.5.1",
+        "vue-yandex-maps": "^2.1.9",
       },
       "devDependencies": {
         "sass-embedded": "^1.87.0",
@@ -620,6 +621,8 @@
     "@whatwg-node/promise-helpers": ["@whatwg-node/promise-helpers@1.3.2", "", { "dependencies": { "tslib": "^2.6.3" } }, "sha512-Nst5JdK47VIl9UcGwtv2Rcgyn5lWtZ0/mhRQ4G8NN2isxpq2TO30iqHzmwoJycjWuyUfg3GFXqP/gFHXeV57IA=="],
 
     "@whatwg-node/server": ["@whatwg-node/server@0.9.71", "", { "dependencies": { "@whatwg-node/disposablestack": "^0.0.6", "@whatwg-node/fetch": "^0.10.5", "@whatwg-node/promise-helpers": "^1.2.2", "tslib": "^2.6.3" } }, "sha512-ueFCcIPaMgtuYDS9u0qlUoEvj6GiSsKrwnOLPp9SshqjtcRaR1IEHRjoReq3sXNydsF5i0ZnmuYgXq9dV53t0g=="],
+
+    "@yandex/ymaps3-types": ["@yandex/ymaps3-types@1.0.16530300", "", { "peerDependencies": { "@types/react": "16-18", "@types/react-dom": "16-18", "@vue/runtime-core": "3" }, "optionalPeers": ["@types/react", "@types/react-dom", "@vue/runtime-core"] }, "sha512-cftV6Y6jbY6oXUSkGWDJDNLQgsA+SdQCW758snHisS48P/xUFjSJEGjLdOKr4fs9X48SX2mKkbqLIl/56nKfJA=="],
 
     "abbrev": ["abbrev@3.0.1", "", {}, "sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg=="],
 
@@ -2042,6 +2045,8 @@
     "vue-eslint-parser": ["vue-eslint-parser@10.1.3", "", { "dependencies": { "debug": "^4.4.0", "eslint-scope": "^8.2.0", "eslint-visitor-keys": "^4.2.0", "espree": "^10.3.0", "esquery": "^1.6.0", "lodash": "^4.17.21", "semver": "^7.6.3" }, "peerDependencies": { "eslint": "^8.57.0 || ^9.0.0" } }, "sha512-dbCBnd2e02dYWsXoqX5yKUZlOt+ExIpq7hmHKPb5ZqKcjf++Eo0hMseFTZMLKThrUk61m+Uv6A2YSBve6ZvuDQ=="],
 
     "vue-router": ["vue-router@4.5.1", "", { "dependencies": { "@vue/devtools-api": "^6.6.4" }, "peerDependencies": { "vue": "^3.2.0" } }, "sha512-ogAF3P97NPm8fJsE4by9dwSYtDwXIY1nFY9T6DyQnGHd1E2Da94w9JIolpe42LJGIl0DwOHBi8TcRPlPGwbTtw=="],
+
+    "vue-yandex-maps": ["vue-yandex-maps@2.1.9", "", { "dependencies": { "@yandex/ymaps3-types": ">=1.0.16530300" }, "peerDependencies": { "@vue/composition-api": ">=1", "nuxt": "^2.16 || ^3", "vue": "^2.7 || ^3.3" }, "optionalPeers": ["@vue/composition-api", "nuxt"] }, "sha512-apZprg1ZKUogyQeFnU/g1UPpeXOuPDbaeBH9C97jt6iCkNXPQoQQmrss/mQvJ5w1iMJ1tyWxRo1IgAFQA31aPw=="],
 
     "web-streams-polyfill": ["web-streams-polyfill@3.3.3", "", {}, "sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw=="],
 

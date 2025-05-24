@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type { Product } from "~/types/orders";
-import ProductForm from "~/components/productForm.vue";
-import { UiFallbackImg } from "#components";
 
 const { categoriesRef, addCategory, updateCategory, deleteCategory } =
   useCathegory();
@@ -60,51 +58,6 @@ const selectedCathegory = (id: number) => {
         v-model:file="file"
         @post="createProduct()"
       />
-
-      <div class="products" v-for="p in productsRef">
-        <div class="child-form">
-          <h6>Обложка</h6>
-          <UiFallbackImg
-            style="aspect-ratio: 600/400; width: 100%; max-width: 200px"
-            :src="coverUrl(p.id)"
-          />
-          <UiImageInput
-            :width="200"
-            :aspect="600 / 400"
-            style="flex-shrink: 0"
-            size="sm"
-            variant="outline"
-            @set="
-              async (file) => {
-                await updateCover(p.id, file);
-                await refresh();
-              }
-            "
-          />
-          <h6>Название</h6>
-          <UiInput v-model="p.name" class="input" size="sm" variant="outline" />
-          <h6>Цена</h6>
-          <UiInput v-model="p.cost" class="input" size="sm" variant="outline" />
-          <h6>Количество</h6>
-          <UiNumberInput
-            v-model="p.count"
-            class="input"
-            size="sm"
-            variant="outline"
-          />
-          <h6>{{ selectedCathegory(p.cathegory_id)?.name || "Категория" }}</h6>
-          <UiSelectMenu
-            size="sm"
-            variant="outline"
-            :entries="caths"
-            @select="
-              (id) => {
-                p.cathegory_id = id;
-              }
-            "
-          ></UiSelectMenu>
-        </div>
-      </div>
     </main>
   </div>
 </template>

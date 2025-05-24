@@ -66,11 +66,11 @@
   --brown-300: #986a44;
   --brown-400: #865e3c;
   --brown-500: #63452c;
-  --light-100: hsl(var(--h), 50%, 95%);
-  --light-200: hsl(var(--h), 45%, 92%);
-  --light-300: hsl(var(--h), 40%, 87%);
-  --light-400: hsl(var(--h), 35%, 82%);
-  --light-500: hsl(var(--h), 30%, 76%);
+  --light-100: hsl(var(--h), 13%, 97%);
+  --light-200: hsl(var(--h), 13%, 92%);
+  --light-300: hsl(var(--h), 13%, 87%);
+  --light-400: hsl(var(--h), 13%, 82%);
+  --light-500: hsl(var(--h), 13%, 76%);
   --dark-100: #77767b;
   --dark-200: #5e5c64;
   --dark-300: #3d3846;

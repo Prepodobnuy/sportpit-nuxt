@@ -83,7 +83,7 @@ export const useCatalogStore = defineStore("catalog", () => {
           state.index = 0;
 
           await search();
-        }, 600);
+        }, 100);
       }
     },
   );

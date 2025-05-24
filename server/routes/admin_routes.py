@@ -2,16 +2,24 @@ import json
 
 from itertools import product
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_user
 from db.session import get_session
 from models import cathegory
 from models.cathegory.cathegory import Cathegory
+from models.cathegory.order import Order, OrderProduct
 from models.cathegory.product import Product
 from models.user.admin import Admin
-from schemas.order import CathegoryPostScheme, CathegoryScheme, ProductPostScheme, ProductScheme
+from schemas.order import (
+    CathegoryPostScheme,
+    CathegoryScheme,
+    OrderProductScheme,
+    OrderScheme,
+    ProductPostScheme,
+    ProductScheme,
+)
 
 
 router = APIRouter()
@@ -261,41 +269,180 @@ async def delete_product(
             raise HTTPException(500)
 
 
+async def get_orders(query: Select, session: AsyncSession) -> list[OrderScheme]:
+    order_product_query = lambda i: select(OrderProduct).where(OrderProduct.order_id == i)
+    order_schemas = []
+
+    async with session:
+        orders = (await session.execute(query)).scalars().all()
+
+        for order in orders:
+            p = (await session.execute(order_product_query(order.id))).scalars().all()
+            order_products: list[OrderProductScheme] = []
+
+            for v in p:
+                product = (
+                    await session.execute(select(Product).where(Product.id == v.product_id))
+                ).scalar_one_or_none()
+                if product is None:
+                    continue
+                count = v.count
+
+                order_product = OrderProductScheme(
+                    id=v.id,
+                    count=count,
+                    product=ProductScheme(
+                        id=product.id,
+                        name=product.name,
+                        cost=product.cost,
+                        count=product.count,
+                        cathegory_id=product.cathegory_id,
+                    ),
+                )
+
+                order_products.append(order_product)
+
+            order_scheme = OrderScheme(
+                id=order.id,
+                name=order.name,
+                phone=order.phone,
+                email=order.email,
+                adress=order.adress,
+                pending=order.pending,
+                completed=order.completed,
+                products=order_products,
+                created_at=order.created_at,
+            )
+            order_schemas.append(order_scheme)
+
+    return order_schemas
+
+
 @router.get("/orders/pending")
 async def get_pending_orders(
     admin: Admin = Depends(get_user),
     session: AsyncSession = Depends(get_session),
-):
-    pass
+) -> list[OrderScheme]:
+    query = select(Order).where(Order.pending == True, Order.completed == False)
+    async with session:
+        try:
+            orders = await get_orders(query, session)
+            return orders
+
+        except Exception:
+            raise HTTPException(500)
+
+
+@router.get("/orders/working")
+async def get_working_orders(
+    admin: Admin = Depends(get_user),
+    session: AsyncSession = Depends(get_session),
+) -> list[OrderScheme]:
+    query = select(Order).where(Order.pending == False, Order.completed == False)
+    async with session:
+        try:
+            orders = await get_orders(query, session)
+            return orders
+
+        except Exception:
+            raise HTTPException(500)
 
 
 @router.get("/orders/completed")
 async def get_completed_orders(
     admin: Admin = Depends(get_user),
     session: AsyncSession = Depends(get_session),
-):
-    pass
+) -> list[OrderScheme]:
+    query = select(Order).where(Order.pending == False, Order.completed == True)
+    async with session:
+        try:
+            orders = await get_orders(query, session)
+            return orders
+
+        except Exception:
+            raise HTTPException(500)
 
 
 @router.put("/order/{order_id}/approve")
 async def approve_order(
+    order_id: int,
     admin: Admin = Depends(get_user),
     session: AsyncSession = Depends(get_session),
 ):
-    pass
+    query = select(Order).where(Order.id == order_id)
+    products_query = select(OrderProduct).where(OrderProduct.order_id == order_id)
+
+    def product_query(id: int):
+        return select(Product).where(Product.id == id)
+
+    async with session:
+        try:
+            order = (await session.execute(query)).scalar_one_or_none()
+            if order is None:
+                raise HTTPException(404)
+
+            if order.pending:
+                order.pending = False
+                order_products = (await session.execute(products_query)).scalars().all()
+                for op in order_products:
+                    product = (
+                        await session.execute(product_query(op.product_id))
+                    ).scalar_one_or_none()
+
+                    if product is None:
+                        continue
+                    product.count -= op.count
+
+            else:
+                order.completed = True
+
+            await session.commit()
+
+        except Exception:
+            await session.rollback()
+            raise HTTPException(500)
 
 
 @router.delete("/order/{order_id}/decline")
 async def decline_order(
+    order_id: int,
     admin: Admin = Depends(get_user),
     session: AsyncSession = Depends(get_session),
 ):
-    pass
+    query = select(Order).where(Order.id == order_id)
+    products_query = select(OrderProduct).where(OrderProduct.order_id == order_id)
 
+    def product_query(id: int):
+        return select(Product).where(Product.id == id)
 
-@router.put("/order/{order_id}/complete")
-async def complete_order(
-    admin: Admin = Depends(get_user),
-    session: AsyncSession = Depends(get_session),
-):
-    pass
+    async with session:
+        try:
+            order = (await session.execute(query)).scalar_one_or_none()
+            if order is None:
+                raise HTTPException(404)
+
+            if order.pending or order.completed:
+                order_products = (await session.execute(products_query)).scalars().all()
+                for op in order_products:
+                    await session.delete(op)
+                await session.flush()
+                await session.delete(order)
+
+            elif not order.pending:
+                order.pending = True
+                order_products = (await session.execute(products_query)).scalars().all()
+                for op in order_products:
+                    product = (
+                        await session.execute(product_query(op.product_id))
+                    ).scalar_one_or_none()
+
+                    if product is None:
+                        continue
+                    product.count += op.count
+
+            await session.commit()
+
+        except Exception as e:
+            print(e)
+            await session.rollback()
+            raise HTTPException(500)

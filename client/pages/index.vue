@@ -2,18 +2,10 @@
 import { UiDropdown } from "#components";
 
 const { state } = useCatalogStore();
-const { breakpoint, isLessOrEquals } = useViewport();
 
-const cols = ref(4);
+const { cols } = useGridColumns();
 const { categoriesRef } = useCathegory();
 const store = useCatalogStore();
-
-watch(breakpoint, () => {
-  cols.value = 4;
-  if (isLessOrEquals("tablet")) cols.value = 3;
-  if (isLessOrEquals("mobileWide")) cols.value = 2;
-  if (isLessOrEquals("mobileMedium")) cols.value = 1;
-});
 </script>
 
 <template>
@@ -109,7 +101,7 @@ watch(breakpoint, () => {
           </UiDropdown>
         </div>
         <UiResponsiveGrid :cols="cols" :gap="12">
-          <Card v-for="p in store.products" :key="p.id" :product="p" />
+          <ProductCard v-for="p in store.products" :key="p.id" :product="p" />
         </UiResponsiveGrid>
       </main>
     </div>

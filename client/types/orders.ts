@@ -14,7 +14,7 @@ export interface OrderProduct {
 
 export interface OrderProductPost {
   count: number;
-  product: Product;
+  product_id: number;
 }
 
 export interface ProductPost {
@@ -40,6 +40,7 @@ export interface Order {
   email: string;
   adress: string;
   pending: boolean;
+  completed: boolean;
   products: OrderProduct[];
   created_at: string;
 }

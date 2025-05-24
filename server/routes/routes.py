@@ -26,6 +26,28 @@ from schemas.order import (
 router = APIRouter()
 
 
+@router.get("/product/{id}")
+async def get_product(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+) -> ProductScheme:
+    async with session:
+        product = (
+            await session.execute(select(Product).where(Product.id == id))
+        ).scalar_one_or_none()
+
+        if product is None:
+            raise HTTPException(404)
+
+        return ProductScheme(
+            id=product.id,
+            name=product.name,
+            cost=product.cost,
+            count=product.count,
+            cathegory_id=product.cathegory_id,
+        )
+
+
 @router.get("/product/{id}/cover")
 async def get_product_cover(
     id: int,
@@ -90,7 +112,6 @@ async def post_order(
                 phone=scheme.phone,
                 email=scheme.email,
                 adress=scheme.adress,
-                created_at=datetime.now(timezone.utc),
             )
             session.add(order)
             await session.flush()
@@ -98,7 +119,7 @@ async def post_order(
             for p in scheme.products:
                 product_order = OrderProduct(
                     order_id=order.id,
-                    product_id=p.product.id,
+                    product_id=p.product_id,
                     count=p.count,
                 )
                 session.add(product_order)
@@ -109,7 +130,8 @@ async def post_order(
         except HTTPException as e:
             await session.rollback()
             raise e
-        except Exception:
+        except Exception as e:
+            print(e)
             await session.rollback()
             raise HTTPException(500)
 

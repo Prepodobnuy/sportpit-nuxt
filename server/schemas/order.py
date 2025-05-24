@@ -19,7 +19,7 @@ class OrderProductScheme(BaseModel):
 
 class OrderProductPostScheme(BaseModel):
     count: int
-    product: ProductScheme
+    product_id: int
 
 
 class ProductPostScheme(BaseModel):
@@ -45,6 +45,7 @@ class OrderScheme(BaseModel):
     email: str
     adress: str
     pending: bool
+    completed: bool
     products: list[OrderProductScheme]
     created_at: datetime
 

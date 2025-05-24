@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import ForeignKey
+from datetime import datetime, timezone
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..base import Base
@@ -20,7 +20,12 @@ class Order(Base):
     adress: Mapped[str]
     pending: Mapped[bool] = mapped_column(default=True, init=False)
     completed: Mapped[bool] = mapped_column(default=False, init=False)
-    created_at: Mapped[datetime]
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(timezone.utc),
+        init=False,
+        nullable=False,
+    )
 
 
 class OrderProduct(Base):

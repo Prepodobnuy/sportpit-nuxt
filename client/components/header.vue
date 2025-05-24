@@ -17,12 +17,7 @@ const handleExit = () => {
           :fw="false"
           @click="navigateTo('/')"
         />
-        <UiButton
-          leading="hugeicons:shopping-basket-01"
-          variant="ghost"
-          label="Корзина"
-          :fw="false"
-        />
+        <CartHeaderButton />
       </div>
 
       <div class="right">
@@ -45,7 +40,6 @@ const handleExit = () => {
             size="sm"
             start
             @click="navigateTo('/login')"
-            ;
           />
           <UiButton
             v-if="logged"
@@ -55,7 +49,7 @@ const handleExit = () => {
             roundness="none"
             size="sm"
             start
-            @click="navigateTo('/admin/products')"
+            @click="navigateTo('/admin/product')"
           />
           <UiButton
             v-if="logged"

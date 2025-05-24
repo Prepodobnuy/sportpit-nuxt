@@ -46,6 +46,17 @@ export const useProduct = () => {
     });
   };
 
+  const deleteProduct = async (id: number) => {
+    const { data } = await useFetch(`/api/admin/product/${id}`, {
+      method: "DELETE",
+      baseURL: config.public.apiBase,
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+      },
+    });
+    refresh();
+  };
+
   const coverUrl = (id: number): string => {
     return `${config.public.apiBase}/api/client/product/${id}/cover`;
   };
@@ -55,6 +66,7 @@ export const useProduct = () => {
     productsRef: products,
     addProduct,
     updateCover,
+    deleteProduct,
     refresh,
     coverUrl,
   };

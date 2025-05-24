@@ -7,11 +7,13 @@ const {
   width = 200,
   color = "neutral",
   variant = "solid",
+  preview,
 } = defineProps<{
   aspect?: number;
   width?: number;
   color?: "neutral" | "primary" | "success" | "warning" | "error";
   variant?: "solid" | "outline" | "soft" | "softborder" | "ghost" | "link";
+  preview?: string;
 }>();
 
 const model = defineModel<File | null>();
@@ -38,6 +40,9 @@ onMounted(() => {
   if (model.value) {
     editValue.value = URL.createObjectURL(model.value);
     edit.value = true;
+  }
+  if (typeof preview !== "undefined") {
+    previewUrl.value = preview;
   }
 });
 

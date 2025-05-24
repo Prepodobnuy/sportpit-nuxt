@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import type { Product } from "~/types/orders";
-
 const { coverUrl } = useProduct();
-const { product } = defineProps<{
-  product: Product;
-}>();
-
+const { product } = defineProps<{ product: Product }>();
 const getStoredState = () => {
   return product.count > 0 ? "instock" : "nostock";
 };
+const cart = useCartStore();
 </script>
 
 <template>
@@ -27,11 +24,40 @@ const getStoredState = () => {
       </div>
       <div class="bottom-line">
         <UiButton
+          v-if="!cart.inCart(product.id)"
+          @click="cart.addProduct(product.id)"
           leading="hugeicons:shopping-cart-add-02"
           size="sm"
           :fw="false"
           icon
         />
+        <div v-else class="action">
+          <p>{{ cart.inCartCount(product.id) }}</p>
+          <UiButton
+            @click="cart.removeProduct(product.id)"
+            leading="hugeicons:minus-sign"
+            size="sm"
+            color="error"
+            variant="outline"
+            :fw="false"
+            icon
+          />
+          <UiButton
+            @click="
+              () => {
+                if (product.count - cart.inCartCount(product.id) > 0) {
+                  cart.addProduct(product.id);
+                }
+              }
+            "
+            leading="hugeicons:plus-sign"
+            size="sm"
+            color="success"
+            variant="outline"
+            :fw="false"
+            icon
+          />
+        </div>
         <p class="cost">{{ product.cost }}</p>
       </div>
     </div>
@@ -91,6 +117,12 @@ const getStoredState = () => {
 
       .cost {
         font-weight: 600;
+      }
+
+      .action {
+        display: inline-flex;
+        align-items: center;
+        gap: calc(var(--gap) / 2);
       }
     }
   }

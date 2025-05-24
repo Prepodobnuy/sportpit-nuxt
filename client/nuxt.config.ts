@@ -17,12 +17,6 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
   ],
 
-  nitro: {
-    prerender: {
-      routes: ["/api/tags", "/api/genres"],
-    },
-  },
-
   runtimeConfig: {
     public: {
       apiBase: "http://127.0.0.1:8000",
@@ -53,4 +47,3 @@ export default defineNuxtConfig({
     storesDirs: ["./stores/**", "./forms/**"],
   },
 });
-
