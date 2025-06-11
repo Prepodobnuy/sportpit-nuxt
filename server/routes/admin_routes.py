@@ -131,6 +131,7 @@ async def get_products(
                     cost=d.cost,
                     count=d.count,
                     cathegory_id=d.cathegory_id,
+                    description=d.description,
                 )
                 for d in data
             ]
@@ -157,7 +158,8 @@ async def create_product(
 
     try:
         parsed = ProductPostScheme(**json.loads(scheme))
-    except Exception:
+    except Exception as e:
+        print(e)
         raise HTTPException(400)
 
     async with session:
@@ -177,6 +179,7 @@ async def create_product(
                 count=parsed.count,
                 cathegory_id=parsed.cathegory_id,
                 cover=content,
+                description=parsed.description,
             )
             session.add(product)
             await session.commit()
@@ -234,6 +237,7 @@ async def update_product(
             product.cost = scheme.cost
             product.count = scheme.count
             product.cathegory_id = scheme.cathegory_id
+            product.description = scheme.description
 
             await session.commit()
         except HTTPException as e:

@@ -1,64 +1,119 @@
-import type {
-  OrderPost,
-  OrderProduct,
-  OrderProductPost,
-  Product,
-} from "~/types/orders";
+interface CartState {
+  products: { id: number; count: number }[];
+}
+
+interface OrderProductPostScheme {
+  products: { product_id: number; count: number }[];
+}
 
 export const useCartStore = defineStore("cart", () => {
-  const productsCookie = useCookie<Record<number, { count: number }>>("cart", {
-    maxAge: 60 * 60 * 24,
-    watch: true,
+  const config = useRuntimeConfig();
+  const cookie = useCookie<CartState>("cart", {
+    maxAge: 3600 * 24 * 7,
+    default: () => ({ products: [] }),
   });
-  const products = reactive<Record<number, { count: number }>>(
-    productsCookie.value || {},
-  );
 
+  const state = ref<CartState>(cookie.value);
   const form = reactive<{
-    name?: string;
-    phone?: string;
-    email?: string;
-    adress?: string;
+    name: string;
+    phone: string;
+    email: string;
+    adress: string;
+    products: OrderProductPostScheme[];
   }>({
-    name: undefined,
-    phone: undefined,
-    email: undefined,
-    adress: undefined,
+    name: "",
+    phone: "",
+    email: "",
+    adress: "",
+    products: [],
   });
 
-  const saveToCookie = () => {
-    productsCookie.value = { ...products };
+  const add_product = (id: number) => {
+    const existingProduct = state.value.products.find((p) => p.id === id);
+    if (existingProduct) {
+      existingProduct.count += 1;
+    } else {
+      state.value.products.push({ id, count: 1 });
+    }
   };
 
-  watch(
-    products,
-    () => {
-      saveToCookie();
-    },
-    { deep: true },
-  );
+  const set_product = (id: number, count: number) => {
+    if (count <= 0) {
+      remove_product(id);
+      return;
+    }
+
+    const existingProduct = state.value.products.find((p) => p.id === id);
+    if (existingProduct) {
+      existingProduct.count = count;
+    } else {
+      state.value.products.push({ id, count });
+    }
+  };
+
+  const remove_product = (id: number) => {
+    const index = state.value.products.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      if (state.value.products[index].count > 1) {
+        state.value.products[index].count -= 1;
+      } else {
+        state.value.products.splice(index, 1);
+      }
+    }
+  };
+
+  const clear_product = (id: number) => {
+    state.value.products = state.value.products.filter((p) => p.id !== id);
+  };
+
+  const clear_products = () => {
+    state.value.products = [];
+  };
+
+  const in_cart_count = computed(() => {
+    return state.value.products.reduce(
+      (total, product) => total + product.count,
+      0,
+    );
+  });
+
+  const product_in_cart_count = (id: number) =>
+    computed(() => {
+      const pr = state.value.products.filter((v) => v.id === id);
+      if (pr.length !== 1) return 0;
+      return pr[0].count;
+    });
+  onMounted(() => {
+    if (cookie.value) {
+      state.value = cookie.value;
+    }
+  });
+
+  const toast = useToast();
 
   const post = async (): Promise<{ error: null | any }> => {
     if (
-      typeof form.name === "undefined" ||
-      typeof form.phone === "undefined" ||
-      typeof form.email === "undefined" ||
-      typeof form.adress === "undefined"
-    )
-      return { error: { message: "form requiered" } };
+      form.name.length < 4 ||
+      form.phone.length < 7 ||
+      form.email.length < 6 ||
+      form.adress.length < 5
+    ) {
+      toast.add({
+        title: "Ошибка",
+        description: "Заполните форму",
+        color: "error",
+      });
+      throw { error: { message: "form requiered" } };
+      return { error: "asd" };
+    }
 
     const config = useRuntimeConfig();
 
-    let productsPost: OrderProductPost[] = [];
-
-    Object.keys(products).forEach((k) => {
-      const id = Number(k);
-      if (products[id]) {
-        productsPost.push({ count: products[id].count, product_id: id });
-      }
+    const productsPost = state.value.products.map((v) => {
+      return { product_id: v.id, count: v.count };
     });
 
-    const scheme: OrderPost = {
+    const scheme = {
       name: form.name,
       email: form.email,
       phone: form.phone,
@@ -73,69 +128,35 @@ export const useCartStore = defineStore("cart", () => {
     });
 
     if (!error.value) {
-      form.name = undefined;
-      form.adress = undefined;
-      form.email = undefined;
-      form.phone = undefined;
+      form.name = "";
+      form.adress = "";
+      form.email = "";
+      form.phone = "";
 
-      Object.keys(products).forEach((key) => {
-        delete products[Number(key)];
-      });
+      state.value.products = [];
     }
 
     return { error };
   };
 
-  const addProduct = (id: number) => {
-    if (!products[id]) {
-      products[id] = { count: 1 };
-    } else {
-      products[id].count++;
-    }
-  };
-
-  const removeProduct = (id: number) => {
-    if (!products[id]) return;
-
-    if (products[id].count === 1) {
-      delete products[id];
-    } else {
-      products[id].count--;
-    }
-  };
-
-  const inCart = (id: number) => id in products;
-  const inCartCount = (id: number) => products[id]?.count || 0;
-
-  const total = computed(() => {
-    return Object.values(products).reduce((sum, item) => sum + item.count, 0);
-  });
-
-  const formValid = computed(() => {
-    if (
-      typeof form.name === "undefined" ||
-      typeof form.phone === "undefined" ||
-      typeof form.email === "undefined" ||
-      typeof form.adress === "undefined"
-    )
-      return false;
-    return true;
-  });
-
-  onMounted(() => {
-    if (productsCookie.value) {
-    }
-  });
+  watch(
+    () => state.value.products,
+    (newProducts) => {
+      cookie.value = { products: newProducts };
+    },
+    { deep: true },
+  );
 
   return {
+    state,
     form,
-    formValid,
-    products,
+    add_product,
+    set_product,
+    remove_product,
+    clear_product,
+    clear_products,
+    in_cart_count,
+    product_in_cart_count,
     post,
-    inCart,
-    inCartCount,
-    addProduct,
-    removeProduct,
-    total,
   };
 });

@@ -67,12 +67,24 @@ const items = (): DropdownMenuItem[][] => [
             class="aspect-[1/1] flex items-center justify-center"
           />
         </UDropdownMenu>
+        <UButton
+          size="xl"
+          leading-icon="hugeicons:plus-sign-square"
+          color="success"
+          class="aspect-[1/1] h-10 flex align-center justify-center"
+          @click="navigateTo('/admin/form/product')"
+        />
       </div>
 
       <CathegorySelect />
 
       <ResponsiveGrid :cols="cols">
-        <ProductCard v-for="id in catalog.state.products" :key="id" :id="id" />
+        <ProductCard
+          v-for="id in catalog.state.products"
+          :key="id"
+          :id="id"
+          mod
+        />
       </ResponsiveGrid>
     </div>
   </div>

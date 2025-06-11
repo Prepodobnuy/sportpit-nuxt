@@ -1,273 +1,119 @@
 <script setup lang="ts">
-const { form, products, post } = useCartStore();
-const { total, formValid } = storeToRefs(useCartStore());
+import { ProductRow, UButton } from "#components";
 
-const viewConfirmPopup = ref(false);
-const viewNotifyPopup = ref(false);
-const isNotifyError = ref(false);
+const { state, form, post, in_cart_count } = useCartStore();
+const toast = useToast();
 
-const empty = computed(() => {
-  return Object.keys(products).length === 0;
+const total_price = computed(() => {
+  return state.products.reduce((total, item) => {
+    const productStore = useProductStore(item.id);
+    const product = productStore.data;
+    const cost = Number(product?.cost) || 0;
+    return total + cost * item.count;
+  }, 0);
 });
 
-const buttonHandle = () => {
-  if (!formValid.value) return;
-  viewConfirmPopup.value = true;
-};
-
-const closePopup = () => {
-  viewConfirmPopup.value = false;
-};
-
-const closeNotifyPopup = () => {
-  if (!isNotifyError.value) {
-    navigateTo("/");
-  }
-};
-
-const confirmOrder = async () => {
-  closePopup();
-  const { error } = await post();
-  if (error.value) {
-    viewNotifyPopup.value = true;
-    isNotifyError.value = true;
+const submitOrder = async () => {
+  if (
+    form.name.length < 4 ||
+    form.phone.length < 7 ||
+    form.email.length < 6 ||
+    form.adress.length < 5
+  ) {
+    toast.add({
+      title: "Ошибка",
+      description: "Заполните форму",
+      color: "error",
+    });
     return;
+  }
+
+  try {
+    await post();
+    toast.add({
+      title: "Заказ отправлен!",
+      description: "Дождитесь звонка оператора для уточнения деталей.",
+      color: "success",
+    });
+  } catch (err) {
+    toast.add({
+      title: "Ошибка =(",
+      description: "Ошибка при отправке заказа.",
+      color: "error",
+    });
   }
 };
 </script>
 
 <template>
-  <div v-if="viewConfirmPopup" class="popup" @click.self="closePopup()">
-    <div class="body">
-      <h1>
-        Нажимая на кнопку "Продолжить" вы подтверждаете правильность введенных
-        данных
-      </h1>
-      <div class="buttons">
-        <UiButton
-          color="error"
-          label="Отмена"
-          variant="outline"
-          size="sm"
-          @click="closePopup()"
-        />
-        <UiButton
-          color="success"
-          label="Продолжить"
-          variant="outline"
-          size="sm"
-          @click="confirmOrder()"
-        />
-      </div>
-    </div>
-  </div>
+  <div class="w-full flex justify-center p-4">
+    <div
+      v-if="in_cart_count > 0"
+      class="w-full max-w-[1100px] flex flex-col gap-2"
+    >
+      <ProductRow v-for="s in state.products" :id="s.id" />
 
-  <div v-if="viewNotifyPopup" class="popup" @click="closeNotifyPopup()">
-    <div class="body">
-      <h1>
-        {{
-          isNotifyError
-            ? "Ошибка при отправке заказа. Попробуйте позже"
-            : "Заказ успешно отправлен! в течении 30-ти минут с вами свяжется оператор для уточнения деталей."
-        }}
-      </h1>
-      <div class="buttons">
-        <UiButton
-          color="success"
-          label="Ок"
-          variant="outline"
-          size="sm"
-          @click="closeNotifyPopup()"
-        />
-      </div>
-    </div>
-  </div>
+      <UForm :state="form" class="grid gap-4" @submit="submitOrder">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <UFormGroup label="ФИО" name="name" required>
+            <UInput
+              v-model="form.name"
+              placeholder="Иванов Иван Иванович"
+              size="xl"
+              class="w-full"
+            />
+          </UFormGroup>
 
-  <div v-if="empty" class="empty-wrapper">
-    <div class="empty">
-      <h1>Корзина пуста =(</h1>
-      <UiButton
-        leading="hugeicons:align-box-middle-left"
-        variant="outline"
-        label="Каталог"
-        size="sm"
-        :fw="false"
-        @click="navigateTo('/')"
-      />
-    </div>
-  </div>
+          <UFormGroup label="Телефон" name="phone" required>
+            <UInput
+              v-model="form.phone"
+              type="tel"
+              placeholder="+375 25 123-45-67"
+              size="xl"
+              class="w-full"
+            />
+          </UFormGroup>
 
-  <div v-else class="cart-wrapper">
-    <main>
-      <h6>Товары в корзине</h6>
-      <div class="products">
-        <ProductCartEntry
-          v-for="p in Object.keys(products)"
-          :product_id="Number(p)"
-          :count="products[Number(p)].count"
-        />
-      </div>
+          <UFormGroup label="Email" name="email">
+            <UInput
+              v-model="form.email"
+              type="email"
+              placeholder="example@mail.com"
+              size="xl"
+              class="w-full"
+            />
+          </UFormGroup>
 
-      <div class="order-wrapper">
-        <div class="order">
-          <h6>Имя</h6>
-          <UiInput
-            style="width: 100%; flex-shrink: 1"
-            variant="outline"
-            size="sm"
-            v-model="form.name"
-          />
-          <h6>Номер телефона</h6>
-          <UiInput
-            style="width: 100%; flex-shrink: 1"
-            variant="outline"
-            size="sm"
-            v-model="form.phone"
-          />
-          <h6>Почта</h6>
-          <UiInput
-            style="width: 100%; flex-shrink: 1"
-            variant="outline"
-            size="sm"
-            v-model="form.email"
-          />
-          <h6>Адресс</h6>
-          <UiInput
-            style="width: 100%; flex-shrink: 1"
-            variant="outline"
-            size="sm"
-            v-model="form.adress"
+          <UFormGroup label="Адрес доставки" name="adress" required>
+            <UInput
+              v-model="form.adress"
+              placeholder="г. Москва, ул. Примерная, д. 1"
+              size="xl"
+              class="w-full"
+            />
+          </UFormGroup>
+        </div>
+
+        <div class="flex flex-col items-end gap-4 mt-4">
+          <div class="text-xl font-bold">
+            Итого: {{ total_price.toFixed(2) }} $
+          </div>
+
+          <UButton
+            type="submit"
+            label="Подтвердить заказ"
+            size="xl"
+            :disabled="state.products.length === 0"
           />
         </div>
-        <div class="bottom-line">
-          <UiButton
-            label="Продолжить"
-            variant="outline"
-            :color="formValid ? `success` : 'neutral'"
-            size="sm"
-            :fw="false"
-            @click="buttonHandle()"
-          />
-        </div>
-      </div>
-    </main>
+      </UForm>
+    </div>
+    <div
+      v-else
+      class="flex flex-col gap-2 items-center min-h-[80vh] justify-center"
+    >
+      <h1 class="text-[2em]">Корзина пуста =(</h1>
+      <UButton label="На главную" @click="navigateTo('/')" />
+    </div>
   </div>
 </template>
-
-<style lang="scss" scoped>
-.popup {
-  background-color: #00000055;
-  display: flex;
-  position: fixed;
-  z-index: 5000;
-  width: 100vw;
-  height: 100vh;
-  top: 0;
-  left: 0;
-  justify-content: center;
-  align-items: center;
-
-  .body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap);
-    width: 100%;
-    max-width: 600px;
-    padding: var(--pd);
-    background-color: var(--window-bg);
-    border-radius: var(--br);
-
-    h1 {
-      text-align: center;
-    }
-
-    .buttons {
-      display: inline-flex;
-      gap: var(--gap);
-    }
-  }
-}
-
-.empty-wrapper {
-  width: 100%;
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  .empty {
-    align-items: center;
-    width: 100%;
-    max-width: 1100px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-
-    gap: calc(var(--gap) * 3);
-
-    h1 {
-      font-size: 1.5em;
-      font-weight: 900;
-    }
-  }
-}
-
-.cart-wrapper {
-  display: inline-flex;
-  width: 100%;
-  justify-content: center;
-
-  main {
-    width: 100%;
-    max-width: 1200px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap);
-    padding: var(--pd);
-
-    .products {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap);
-      overflow-y: auto;
-      max-height: 480px;
-    }
-
-    .products-empty {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 10px;
-      align-items: center;
-
-      h1 {
-        font-weight: 800;
-        font-size: 1.1em;
-      }
-    }
-
-    .order-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: calc(var(--gap) * 2.5);
-      width: 100%;
-      align-items: center;
-
-      .order {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        gap: var(--gap);
-      }
-
-      .bottom-line {
-        width: 100%;
-        display: inline-flex;
-        flex-direction: row-reverse;
-      }
-    }
-  }
-}
-</style>

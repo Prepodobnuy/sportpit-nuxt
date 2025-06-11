@@ -19,3 +19,5 @@ class Product(Base):
     count: Mapped[int]
     cathegory_id: Mapped[int] = mapped_column(ForeignKey("cathegory.id"))
     cover: Mapped[bytes | None]
+
+    description: Mapped[str | None]

@@ -1,109 +1,122 @@
-import type { Product, SearchParams, SearchResult } from "~/types/orders";
+interface ProductScheme {
+  id: number;
+  name: string;
+  cost: string;
+  count: number;
+  cathegory_id: number;
+  description: string | null;
+}
 
 export const useCatalogStore = defineStore("catalog", () => {
   const config = useRuntimeConfig();
-  const { categoriesRef } = useCathegory();
+  const { selected_cathegory_id } = useCathegoriesStore();
+  const categoriesStore = useCathegoriesStore();
 
-  const state = reactive({
-    asideActive: false,
-    selected_cathegory: 0,
-    selected_search_filter: 0,
-    reversed_search: false,
-    index: 0,
+  const state = reactive<{
+    loading: boolean;
+    prompt: string;
+    products: number[];
+    sort_index: number;
+    descending: boolean;
+    index: number;
+    end: boolean;
+    cathegory_id: number;
+  }>({
+    loading: false,
     prompt: "",
+    products: [],
+    sort_index: 0, // 0 - name 1 - cost
+    descending: false,
+    index: 0,
     end: false,
+    cathegory_id: selected_cathegory_id || 0,
   });
 
-  const products = ref<Product[]>([]);
+  const search_debounce = ref<ReturnType<typeof setTimeout> | null>(null);
 
-  const debounce = ref<ReturnType<typeof setTimeout> | null>(null);
+  const search = () => {
+    if (state.loading) return;
+    if (state.end) return;
+    if (search_debounce.value) clearTimeout(search_debounce.value);
 
-  const search = async () => {
-    const cathegory_id = state.selected_cathegory;
-    const in_stock_only = false;
-    const prompt = state.prompt;
-    const reversed = state.reversed_search;
-    const order_by = state.selected_search_filter == 0 ? "name" : "cost";
+    search_debounce.value = setTimeout(async () => {
+      state.loading = true;
+      try {
+        const body = {
+          cathegory_id: state.cathegory_id,
+          in_stock_only: true,
+          prompt: state.prompt,
+          reversed: state.descending,
+          order_by: state.sort_index === 0 ? "name" : "cost",
+        };
 
-    const form: SearchParams = {
-      cathegory_id: cathegory_id,
-      in_stock_only: in_stock_only,
-      prompt: prompt,
-      reversed: reversed,
-      order_by: order_by,
-    };
+        const response = await $fetch<{
+          end: boolean;
+          products: ProductScheme[];
+        }>(`/api/client/search/${state.index}`, {
+          method: "POST",
+          baseURL: config.public.apiBase,
+          body: body,
+        });
 
-    const { data, error } = await useFetch<SearchResult>(
-      `/api/client/search/${state.index}`,
-      {
-        method: "POST",
-        body: form,
-        baseURL: config.public.apiBase,
-      },
-    );
-
-    if (error.value) {
-      debounce.value = setTimeout(async () => {
-        state.index = 0;
-
-        await search();
-      }, 5000);
-      return;
-    }
-
-    if (data.value) {
-      state.end = data.value.end;
-      if (state.index === 0) {
-        products.value = data.value.products;
-      } else {
-        products.value = [...products.value, ...data.value.products];
+        state.index += 1;
+        state.end = response.end;
+        state.products = response.products.map((v) => v.id);
+      } finally {
+        state.loading = false;
       }
-      state.index += 1;
-      return;
-    }
+    }, 1000);
   };
+
+  const reset_search = () => {
+    if (search_debounce.value) clearTimeout(search_debounce.value);
+    state.loading = false;
+    state.end = false;
+    state.index = 0;
+
+    search();
+  };
+
+  onMounted(() => {
+    reset_search();
+  });
 
   watch(
     () => [
-      state.selected_cathegory,
-      state.selected_search_filter,
-      state.reversed_search,
+      state.cathegory_id,
       state.prompt,
+      state.descending,
+      state.sort_index,
     ],
-    (newValues, oldValues) => {
-      if (
-        newValues[0] !== oldValues[0] ||
-        newValues[1] !== oldValues[1] ||
-        newValues[2] !== oldValues[2] ||
-        newValues[3] !== oldValues[3]
-      ) {
-        if (debounce.value) clearTimeout(debounce.value);
+    (value) => {
+      reset_search();
+    },
+  );
 
-        debounce.value = setTimeout(async () => {
-          state.index = 0;
-
-          await search();
-        }, 100);
+  watch(
+    () => categoriesStore.selected_cathegory_id,
+    (newId) => {
+      if (newId !== undefined && newId !== null) {
+        state.cathegory_id = newId;
+        reset_search();
       }
     },
   );
 
-  onMounted(() => {
-    if (!categoriesRef.value) {
-      state.selected_cathegory = 0;
-    } else {
-      state.selected_cathegory = categoriesRef.value[0].id;
-    }
-
-    debounce.value = setTimeout(async () => {
-      state.index = 0;
-
-      await search();
-    }, 600);
-  });
+  watch(
+    [
+      () => state.cathegory_id,
+      () => state.prompt,
+      () => state.descending,
+      () => state.sort_index,
+    ],
+    () => {
+      reset_search();
+    },
+    { deep: true },
+  );
 
   return {
     state,
-    products,
   };
 });

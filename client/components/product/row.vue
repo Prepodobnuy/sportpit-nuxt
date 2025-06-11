@@ -34,28 +34,26 @@ const handleSelfClick = () => {
   <article
     v-if="store.data"
     @click.self="handleSelfClick"
-    class="flex gap-1 p-[2px] bg-gray-800 border light:bg-gray-100 light:border-gray-300 border-gray-700 rounded-[8px] flex-col h-max"
+    class="flex gap-4 p-2 bg-gray-800 border light:bg-gray-100 light:border-gray-300 border-gray-700 rounded-[8px] items-center h-max w-full"
   >
-    <main class="flex flex-col gap-0" @click.self="handleSelfClick">
-      <img class="pic rounded-[6px]" :src="cover" />
-      <div class="flex flex-col gap-1 p-1" @click="handleSelfClick">
-        <p
-          class="font-bold gap-1 text-nowrap text-clip overflow-hidden inline-flex self-start items-center"
-        >
-          {{ store.data.cost }} $
-        </p>
-        <p class="text-wrap line-clamp-2 text-clip overflow-hidden">
-          {{ store.data.name }}
-        </p>
-      </div>
-    </main>
-    <footer
-      class="flex flex-row gap-1 items-center justify-end inline-flex w-[100%]"
-    >
+    <img
+      class="pic rounded-[6px] w-24 h-24"
+      :src="cover"
+      @click="handleSelfClick"
+    />
+
+    <div class="flex-1 min-w-0" @click="handleSelfClick">
+      <p class="font-bold text-lg">{{ store.data.cost }} $</p>
+      <p class="text-wrap line-clamp-2 text-clip overflow-hidden">
+        {{ store.data.name }}
+      </p>
+    </div>
+
+    <footer class="flex items-center gap-1 ml-auto">
       <UButton
         v-if="in_cart_count <= 0 && !mod"
         leading-icon="hugeicons:shopping-basket-01"
-        class="w-max self-end"
+        class="w-max"
         size="xl"
         @click="increment"
       />
@@ -66,7 +64,7 @@ const handleSelfClick = () => {
         <UButton
           color="neutral"
           leading-icon="hugeicons:minus-sign"
-          class="w-max self-end"
+          class="w-max"
           variant="subtle"
           size="xl"
           @click="decrement"
@@ -74,7 +72,7 @@ const handleSelfClick = () => {
         <UButton
           color="neutral"
           leading-icon="hugeicons:plus-sign"
-          class="w-max self-end"
+          class="w-max"
           variant="subtle"
           size="xl"
           @click="increment"
@@ -84,7 +82,7 @@ const handleSelfClick = () => {
         <UButton
           color="success"
           leading-icon="hugeicons:plus-sign"
-          class="w-max self-end"
+          class="w-max"
           variant="subtle"
           size="xl"
           @click="navigateTo(`/admin/edit/product/${id}`)"
@@ -92,7 +90,7 @@ const handleSelfClick = () => {
         <UButton
           color="error"
           leading-icon="hugeicons:delete-01"
-          class="w-max self-end"
+          class="w-max"
           variant="subtle"
           size="xl"
           @click="store.deletee()"
@@ -104,7 +102,8 @@ const handleSelfClick = () => {
 
 <style lang="scss" scoped>
 .pic {
-  width: 100%;
-  aspect-ratio: 4/3;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
 }
 </style>

@@ -1,6 +1,7 @@
 import asyncio
 
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.session import get_session, async_session_maker
 from models import create_metadata
@@ -15,7 +16,13 @@ def main():
 
 async def create_admin():
     async with async_session_maker() as session:
-        user = Admin(username="admin", password="admin")
+        users = (
+            (await session.execute(select(Admin).where(Admin.username == "admin"))).scalars().all()
+        )
+        for u in users:
+            await session.delete(u)
+        await session.flush()
+        user = Admin(username="admin", password="adminadmin")
         session.add(user)
         await session.commit()
 

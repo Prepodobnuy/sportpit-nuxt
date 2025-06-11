@@ -9,6 +9,7 @@ class ProductScheme(BaseModel):
     cost: str
     count: int
     cathegory_id: int
+    description: str | None
 
 
 class OrderProductScheme(BaseModel):
@@ -27,6 +28,7 @@ class ProductPostScheme(BaseModel):
     cost: str
     count: int
     cathegory_id: int
+    description: str | None
 
 
 class CathegoryScheme(BaseModel):

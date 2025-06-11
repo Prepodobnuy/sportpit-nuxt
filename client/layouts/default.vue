@@ -1,24 +1,15 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const mobile = isMobile();
+</script>
 
 <template>
-  <Header class="header" />
-  <div class="content__">
-    <slot />
+  <div class="layout">
+    <Header
+      class="header fixed left-0 h-12 z-1000 bg-gray-800 light:bg-gray-200"
+      :class="mobile ? 'bottom-0' : 'top-0'"
+    />
+    <div :class="mobile ? 'mb-12' : 'mt-12'">
+      <slot />
+    </div>
   </div>
 </template>
-
-<style lang="scss" scoped>
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: calc(54px * var(--root-scale));
-  z-index: 3000;
-}
-
-.content__ {
-  margin-top: calc(54px * var(--root-scale));
-  --margin-top: calc(54px * var(--root-scale));
-}
-</style>

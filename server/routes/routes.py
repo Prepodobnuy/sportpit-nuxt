@@ -45,6 +45,7 @@ async def get_product(
             cost=product.cost,
             count=product.count,
             cathegory_id=product.cathegory_id,
+            description=product.description,
         )
 
 
@@ -184,6 +185,7 @@ async def search(
                         cost=product.cost,
                         count=product.count,
                         cathegory_id=product.cathegory_id,
+                        description=product.description,
                     )
                     for product in products
                 ],
